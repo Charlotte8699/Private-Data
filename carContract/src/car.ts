@@ -8,6 +8,8 @@ import { Object, Property } from 'fabric-contract-api';
 export class Car {
 
     @Property()
-    public value: string;
-
+    public color: string;
+    public make: string;
+    public model: string;
+    public docType?: string;
 }
