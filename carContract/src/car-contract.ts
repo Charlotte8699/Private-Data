@@ -60,11 +60,11 @@ export class CarContract extends Contract {
             advertizedDate,
             advertizedPrice,
             carId,
-            contractID: contractId,
+            contractId,
             seller,
         };
 
-        await ctx.stub.putState(contractId, Buffer.from(JSON.stringify(carTrade)));
+        await ctx.stub.putState(carTrade.contractId, Buffer.from(JSON.stringify(carTrade)));
 
         return JSON.stringify(carTrade);
     }
@@ -85,17 +85,19 @@ export class CarContract extends Contract {
 
         // get the transient data and put values into the privateData object
         transientData.forEach((value, key) => {
-            const dataValue = new Buffer(value.buffer).toString();
+            const dataValue = new Uint8Array(value).toString();
             if (key === 'privateBuyer') {
                 privateData[key] = dataValue;
             }
             if (key === 'privatePrice') {
-                privateData[key] = parseInt(dataValue);
+                privateData[key] = parseInt(dataValue, 10);
             }
         });
 
         // update state of public ledger
 
+        console.log(privateData);
+        // const privateData2 = {privateBuyer: 'bob', privatePrice: 2200};
         // putPrivateData based on the collection definition for buyer organization and privateData object
         await ctx.stub.putPrivateData('CollectionBuyer', contractId, Buffer.from(JSON.stringify(privateData)));
 
@@ -135,13 +137,13 @@ export class CarContract extends Contract {
         transientData.forEach((value, key) => {
             const dataValue = new Buffer(value.buffer).toString();
             if (key === 'acceptPrice') {
-                privateData[key] = parseInt(dataValue);
+                privateData[key] = parseInt(dataValue, 10);
             }
             if (key === 'privateBuyer') {
                 privateData[key] = dataValue;
             }
             if (key === 'privatePrice') {
-                privateData[key] = parseInt(dataValue);
+                privateData[key] = parseInt(dataValue, 10);
             }
         });
 
