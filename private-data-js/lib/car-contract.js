@@ -15,7 +15,7 @@ class CarContract extends Contract {
      *
      * @param {Context} ctx
      */
-    async initLedger (ctx) {
+    async initLedger(ctx) {
         console.info('============= START : Initialize Ledger ===========');
         const cars = [
             {
@@ -92,7 +92,7 @@ class CarContract extends Contract {
      * @param {Context} ctx
      * @param {String} contractId
      */
-    async offer (ctx, contractId) {
+    async offer(ctx, contractId) {
 
         // initialize privateData object
         let privateData = {};
@@ -128,7 +128,7 @@ class CarContract extends Contract {
      * @param {Context} ctx
      * @param {String} contractId
      */
-    async readOffer (ctx, contractId) {
+    async readOffer(ctx, contractId) {
         let privateDataString;
         const privateData = await ctx.stub.getPrivateData(CollectionBuyer, contractId);
         if (privateData.length > 0) {
@@ -148,20 +148,26 @@ class CarContract extends Contract {
      * @param {Context} ctx
      * @param {String} contractId
      */
-    async accept (ctx, contractId) {
+    async accept(ctx, contractId) {
         // initialize privateData object
         let privateData = {};
 
         // check whether transient data with buyer and offer price exists
         const transientData = ctx.stub.getTransient();
-        if (transientData.size === 0) {return 'Error: Transient data not supplied. Try again.';}
+        if (transientData.size === 0) { return 'Error: Transient data not supplied. Try again.'; }
 
         // get the transient data and put values into the privateData object
         transientData.forEach((value, key) => {
             let dataValue = new Buffer(value.toArrayBuffer()).toString();
-            if (key === 'acceptPrice') {privateData[key] = parseInt(dataValue);}
-            if (key === 'privateBuyer') {privateData[key] = dataValue;}
-            if (key === 'privatePrice') {privateData[key] = parseInt(dataValue);}
+            if (key === 'acceptPrice') {
+                privateData[key] = parseInt(dataValue);
+            }
+            if (key === 'privateBuyer') {
+                privateData[key] = dataValue;
+            }
+            if (key === 'privatePrice') {
+                privateData[key] = parseInt(dataValue);
+            }
         });
 
         // update state of public ledger
@@ -177,7 +183,7 @@ class CarContract extends Contract {
      * @param {Context} ctx
      * @param {String} contractId
      */
-    async readAccept (ctx, contractId) {
+    async readAccept(ctx, contractId) {
         let privateDataString;
         const privateData = await ctx.stub.getPrivateData(CollectionSeller, contractId);
         if (privateData.length > 0) {
@@ -195,35 +201,50 @@ class CarContract extends Contract {
     /**
      * CUSTOM: OPTIONAL LAB: Cross verify the channel hash of the offer data, against what the seller's bank sees - see if they match
      * @param {Context} ctx the transaction context
+     * @param {String} collection  the collection name - this function can be called by a regulator, calling different collections etc.
      * @param {String} contractId contractID
-     * @param {String} hashvalue  the SHA256 hash string calculated from the source private data
-    */
+     * @param {String} hashToVerify  the SHA256 hash string calculated from the source private data to compare against the hash store
+     */
 
-    // async crossVerifyWorldState(ctx, contractId, hashvalue) {
+    async verifyPrivateData(ctx, collection, contractId, hashToVerify) {
+        console.log('retrieving the hash from the PDC hash store of the buy transaction (fn: crossVerify)' + contractId);
 
-    //     // Method 1: CUSTOM calculate a SHA256 hash, of the offer data - supplied as a hash to this function)
-    //     // eg. '{"privatebuyer":"DigiBank","privateprice":"9999"}' was written to the originator's own private collection state
-    //     // eg. let actual_hash = crypto.createHash('sha256').update(data).digest("hex");
-    //     // see 'offer' function - for info on the offer hash written to channel ledger - that's cross-checked in this CUSTOM method
+        let pdHashBytes = await ctx.stub.getPrivateDataHash(collection, contractId);
 
-    //     console.log('retrieving the hash of the buy transaction (fn: crossVerifyWorldState) in the world state' + contractId);
+        if (pdHashBytes.length > 0) {
+            // got hash from the hash store
+            console.log('retrieved private data hash from collection');
+        }
+        else {
+            // hash doesn't exist with the given key
+            console.log('No private data hash with that Key: ', contractId);
+            return 'No private data hash with that Key: ' + contractId;
+        }
 
-    //     // Get the 'channel hash' written (earlier) when the the 'offer' function was invoked -  get the valuefrom the world state
-    //     let checkBytes = await ctx.stub.getState(contractId);
-    //     let checkObj = JSON.parse(checkBytes);
-    //     if (checkBytes.length > 0) {
-    //         console.log('retrieved contract (crossVerifyWorldState function)');
-    //         console.log(checkObj);
-    //     } else {
-    //         console.log('Nothing advertised with that Key: ', contractId);
-    //         return ('EMPTY CONTRACT (crossVerifyWorldState function)');
-    //     }
-    //     if (hashvalue === checkObj.accept.offer.offerhash){
-    //         return 'Hash matches!!: Calculated hash:  ' + hashvalue + '\n <----->  Hash from world state is ' + checkObj.accept.offer.offerhash;
-    //     } else {
-    //         return 'No match';
-    //     }
-    // }
+        //  retrieve SHA256 hash of the converted Byte array -> string from private data collection's hash store (DB)
+        let actual_hash = pdHashBytes.toString('hex');
+
+        // Get the 'channel hash' written in the 'offer' function - from the world state
+        let acceptBytes = await ctx.stub.getState(contractId);
+        if (acceptBytes.length > 0) {
+            var verify = JSON.parse(acceptBytes);
+            console.log('retrieved contract (verifyPrivateData)');
+            console.log(verify);
+        }
+        else {
+            console.log('Nothing advertised with that Key: ', contractId);
+            var verify = "EMPTY CONTRACT (verifyPrivateData function)";
+            return verify;
+        }
+        if (hashToVerify === actual_hash) {
+            let accept = verify.accept;
+            // update the status - on the world state
+            await ctx.stub.putState(contractId, Buffer.from(JSON.stringify({ accept })));
+            return '\nCalculated Hash provided: \n' + hashToVerify + '\n\n             MATCHES  <----->  \n\nHash from Private Data Hash State \n' + actual_hash;
+        } else {
+            return 'Could not match the Private Data Hash State: ' + actual_hash;
+        }
+    }
 
 }
 
