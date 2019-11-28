@@ -105,7 +105,8 @@ class CarContract extends Contract {
 
         // get the transient data and put values into the privateData object
         transientData.forEach((value, key) => {
-            let dataValue = new Buffer(value.toArrayBuffer()).toString();
+            // let dataValue = new Buffer(value.toArrayBuffer()).toString();
+            let dataValue = value.toString('utf8');
             if (key === 'privateBuyer') {
                 privateData[key] = dataValue;
             }
@@ -158,7 +159,7 @@ class CarContract extends Contract {
 
         // get the transient data and put values into the privateData object
         transientData.forEach((value, key) => {
-            let dataValue = new Buffer(value.toArrayBuffer()).toString();
+            let dataValue = value.toString('utf8');
             if (key === 'acceptPrice') {
                 privateData[key] = parseInt(dataValue);
             }
@@ -170,7 +171,6 @@ class CarContract extends Contract {
             }
         });
 
-        // update state of public ledger
         // putPrivateData based on the collection definition for buyer organization and privateData object
         await ctx.stub.putPrivateData(CollectionSeller, contractId, Buffer.from(JSON.stringify(privateData)));
 
