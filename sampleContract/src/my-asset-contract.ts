@@ -86,12 +86,12 @@ export class MyAssetContract extends Contract {
     }
 
     @Transaction()
-    public async deleteMyAsset(ctx: Context, myAssetId: string, collection: string): Promise<void> {
+    public async deleteMyAsset(ctx: Context, myAssetId: string): Promise<void> {
         const exists = await this.myAssetExists(ctx, myAssetId);
         if (!exists) {
             throw new Error(`The my asset ${myAssetId} does not exist`);
         }
-        await ctx.stub.deletePrivateData(collection, myAssetId);
+        await ctx.stub.deletePrivateData(sampleCollection, myAssetId);
     }
 
     @Transaction(false)
