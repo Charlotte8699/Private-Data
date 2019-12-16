@@ -1,6 +1,6 @@
 [
      {
-          "name": "sampleCollection",
+          "name": "myCollection",
           "policy": {
                "identities": [
                     {

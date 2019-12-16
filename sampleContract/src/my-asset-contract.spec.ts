@@ -4,7 +4,7 @@
 
 import { Context } from 'fabric-contract-api';
 import { ChaincodeStub, ClientIdentity } from 'fabric-shim';
-import { MyAssetContract } from '.';
+import { MyPrivateAssetContract } from '.';
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -25,79 +25,111 @@ class TestContext implements Context {
      };
 }
 
-describe('MyAssetContract', () => {
+describe('MyPrivateAssetContract', () => {
 
-    let contract: MyAssetContract;
+    let contract: MyPrivateAssetContract;
     let ctx: TestContext;
+    const myCollection: string = 'myCollection';
 
     beforeEach(() => {
-        contract = new MyAssetContract();
+        contract = new MyPrivateAssetContract();
         ctx = new TestContext();
-        ctx.stub.getState.withArgs('1001').resolves(Buffer.from('{"value":"my asset 1001 value"}'));
-        ctx.stub.getState.withArgs('1002').resolves(Buffer.from('{"value":"my asset 1002 value"}'));
+        ctx.stub.getPrivateData.withArgs(myCollection, '001').resolves(Buffer.from('{"privateValue":"150"}'));
     });
 
-    describe('#myAssetExists', () => {
+    describe('#MyPrivateAssetExists', () => {
 
-        it('should return true for a my asset', async () => {
-            await contract.myAssetExists(ctx, '1001').should.eventually.be.true;
+        it('should return true for an existing private asset', async () => {
+            await contract.myPrivateAssetExists(ctx, '001').should.eventually.be.true;
         });
 
-        it('should return false for a my asset that does not exist', async () => {
-            await contract.myAssetExists(ctx, '1003').should.eventually.be.false;
-        });
-
-    });
-
-    describe('#createMyAsset', () => {
-
-        it('should create a my asset', async () => {
-            await contract.createMyAsset(ctx, '1003', 'my asset 1003 value');
-            ctx.stub.putState.should.have.been.calledOnceWithExactly('1003', Buffer.from('{"value":"my asset 1003 value"}'));
-        });
-
-        it('should throw an error for a my asset that already exists', async () => {
-            await contract.createMyAsset(ctx, '1001', 'myvalue').should.be.rejectedWith(/The my asset 1001 already exists/);
+        it('should return false for a private asset that does not exist', async () => {
+            await contract.myPrivateAssetExists(ctx, '002').should.eventually.be.false;
         });
 
     });
 
-    describe('#readMyAsset', () => {
+    describe('#createMyPrivateAsset', () => {
 
-        it('should return a my asset', async () => {
-            await contract.readMyAsset(ctx, '1001').should.eventually.deep.equal({ value: 'my asset 1001 value' });
+        it('should create a private asset', async () => {
+            ctx.stub.getTransient.resolves(['privateValue', Buffer.from('1500')]);
+            await contract.createMyPrivateAsset(ctx, '002');
+            ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollection, '002', Buffer.from('{"privateValue":"1500"}'));
         });
 
-        it('should throw an error for a my asset that does not exist', async () => {
-            await contract.readMyAsset(ctx, '1003').should.be.rejectedWith(/The my asset 1003 does not exist/);
+        it('should throw an error if transient data is not provided when creating private asset', async () => {
+            ctx.stub.getTransient.resolves(undefined);
+            await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith(`Transient data not supplied Please try again.`);
         });
 
-    });
-
-    describe('#updateMyAsset', () => {
-
-        it('should update a my asset', async () => {
-            await contract.updateMyAsset(ctx, '1001', 'my asset 1001 new value');
-            ctx.stub.putState.should.have.been.calledOnceWithExactly('1001', Buffer.from('{"value":"my asset 1001 new value"}'));
-        });
-
-        it('should throw an error for a my asset that does not exist', async () => {
-            await contract.updateMyAsset(ctx, '1003', 'my asset 1003 new value').should.be.rejectedWith(/The my asset 1003 does not exist/);
+        it('should throw an error for a private asset that already exists', async () => {
+            await contract.createMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The my asset 001 already exists`);
         });
 
     });
 
-    describe('#deleteMyAsset', () => {
+    describe('#readMyPrivateAsset', () => {
 
-        it('should delete a my asset', async () => {
-            await contract.deleteMyAsset(ctx, '1001');
-            ctx.stub.deleteState.should.have.been.calledOnceWithExactly('1001');
+        it('should return my private asset', async () => {
+            await contract.readMyPrivateAsset(ctx, '001').should.eventually.deep.equal({ privateValue: '150' });
+            ctx.stub.getPrivateData.should.have.been.calledWithExactly(myCollection, '001');
         });
 
-        it('should throw an error for a my asset that does not exist', async () => {
-            await contract.deleteMyAsset(ctx, '1003').should.be.rejectedWith(/The my asset 1003 does not exist/);
+        it('should throw an error for my private asset that does not exist', async () => {
+            await contract.readMyPrivateAsset(ctx, '003').should.be.rejectedWith('The my asset 003 does not exist');
         });
 
+    });
+
+    describe('#updateMyPrivateAsset', () => {
+
+        it('should update my private asset', async () => {
+            ctx.stub.getTransient.resolves(['privateValue', Buffer.from('99')]);
+            await contract.updateMyPrivateAsset(ctx, '001');
+            ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollection, '001', Buffer.from('{"privateValue":"99"}'));
+        });
+
+        it('should throw an error if transient data is not provided when updating private asset', async () => {
+            ctx.stub.getTransient.resolves(undefined);
+            await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith(`Transient data not supplied. Please try again.`);
+        });
+
+        it('should throw an error for my private asset that does not exist', async () => {
+            await contract.updateMyPrivateAsset(ctx, '003').should.be.rejectedWith(`The my asset 003 does not exist`);
+        });
+
+    });
+
+    describe('#deleteMyPrivateAsset', () => {
+
+        it('should delete my private asset', async () => {
+            await contract.deleteMyPrivateAsset(ctx, '001');
+            ctx.stub.deletePrivateData.should.have.been.calledOnceWithExactly(myCollection, '001');
+        });
+
+        it('should throw an error for my private asset that does not exist', async () => {
+            await contract.deleteMyPrivateAsset(ctx, '1003').should.be.rejectedWith('The my asset 1003 does not exist');
+        });
+
+    });
+
+    describe('#verifyMyPrivateAsset', () => {
+
+        // it('should verify my private asset', async () => {
+        //     return;
+        // });
+
+        it('should error if an org which doesnt have permission tries to verify private asset', async () => {
+            // How do you stub clientIdentity to ensure the MSPID is what you want it to be?
+            await contract.verifyMyPrivateAsset(ctx, myCollection, '001', 'xyz').should.be.rejectedWith('Only the regulator can verify the asset.');
+            // tslint:disable-next-line: no-unused-expression
+            ctx.stub.getPrivateDataHash.should.not.have.been.called;
+
+        });
+
+        // it('should error if no hash for that asset key', async () => {
+
+        // });
     });
 
 });
