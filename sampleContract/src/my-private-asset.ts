@@ -5,9 +5,9 @@
 import { Object, Property } from 'fabric-contract-api';
 
 @Object()
-export class MyAsset {
+export class MyPrivateAsset {
 
     @Property()
-    public value: string;
+    public privateValue: string;
 
 }
