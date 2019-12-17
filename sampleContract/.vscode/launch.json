@@ -5,12 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "fabric:node",
+            "type": "node",
             "request": "launch",
-            "name": "Debug Smart Contract",
-            "preLaunchTask": "tsc: build - tsconfig.json",
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
+            "name": "Mocha Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u",
+                "tdd",
+                "--timeout",
+                "999999",
+                "--colors",
+                "${workspaceFolder}/src/my-asset-contract.spec.ts"
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": [
+                "<node_internals>/**"
             ]
         }
     ]
