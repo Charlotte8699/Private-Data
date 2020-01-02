@@ -3,30 +3,30 @@
  */
 
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
-const sampleCollection: string = 'sampleCollection';
+const myCollection: string = 'myCollection';
 
-@Info({title: 'MyAssetContract', description: 'My Smart Contract' })
-export class MyAssetContract extends Contract {
+@Info({title: 'MyPrivateAssetContract', description: 'My Smart Contract' })
+export class MyPrivateAssetContract extends Contract {
 
     @Transaction(false)
     @Returns('boolean')
-    public async myAssetExists(ctx: Context, myAssetId: string): Promise<boolean> {
-        const buffer = await ctx.stub.getPrivateData(sampleCollection, myAssetId);
+    public async myPrivateAssetExists(ctx: Context, myPrivateAssetId: string): Promise<boolean> {
+        const buffer = await ctx.stub.getPrivateData(myCollection, myPrivateAssetId);
         return (!!buffer && buffer.length > 0);
     }
 
     @Transaction()
-    public async createMyAsset(ctx: Context, myAssetId: string): Promise<void> {
-        const exists = await this.myAssetExists(ctx, myAssetId);
+    public async createMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<void> {
+        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (exists) {
-            throw new Error(`The my asset ${myAssetId} already exists`);
+            throw new Error(`The my asset ${myPrivateAssetId} already exists`);
         }
 
         const privateData: any = {};
 
         const transientData = ctx.stub.getTransient();
         if (transientData.size === 0) {
-            throw new Error(`Transient data not supplied. Try again.`);
+            throw new Error(`Transient data not supplied. Please try again.`);
         }
 
         // get the transient data and put values into the privateData object
@@ -37,41 +37,41 @@ export class MyAssetContract extends Contract {
             }
         });
 
-        await ctx.stub.putPrivateData(sampleCollection, myAssetId, Buffer.from(JSON.stringify(privateData)));
+        await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateData)));
     }
 
     @Transaction(false)
-    @Returns('MyAsset')
-    public async readMyAsset(ctx: Context, myAssetId: string): Promise<string> {
-        const exists = await this.myAssetExists(ctx, myAssetId);
+    @Returns('myPrivateAsset')
+    public async readMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<string> {
+        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (!exists) {
-            throw new Error(`The my asset ${myAssetId} does not exist`);
+            throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
         }
         let privateDataString: string;
-        const privateData: Buffer = await ctx.stub.getPrivateData(sampleCollection, myAssetId);
+        const privateData: Buffer = await ctx.stub.getPrivateData(myCollection, myPrivateAssetId);
         if (privateData.length > 0) {
             privateDataString = JSON.parse(privateData.toString());
             console.log('Private data retrieved from collection.');
             console.log(privateDataString);
         } else {
-            console.log('No private data with the Key: ', myAssetId);
-            return ('No private data with the Key: ' + myAssetId);
+            console.log('No private data with the Key: ', myPrivateAssetId);
+            return ('No private data with the Key: ' + myPrivateAssetId);
         }
         return privateDataString;
     }
 
     @Transaction()
-    public async updateMyAsset(ctx: Context, myAssetId: string): Promise<void> {
-        const exists = await this.myAssetExists(ctx, myAssetId);
+    public async updateMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<void> {
+        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (!exists) {
-            throw new Error(`The my asset ${myAssetId} does not exist`);
+            throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
         }
 
         const privateData: any = {};
 
         const transientData = ctx.stub.getTransient();
         if (transientData.size === 0) {
-            throw new Error(`Transient data not supplied. Try again.`);
+            throw new Error(`Transient data not supplied. Please try again.`);
         }
 
         // get the transient data and put values into the privateData object
@@ -82,32 +82,32 @@ export class MyAssetContract extends Contract {
             }
         });
 
-        await ctx.stub.putPrivateData(sampleCollection, myAssetId, Buffer.from(JSON.stringify(privateData)));
+        await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateData)));
     }
 
     @Transaction()
-    public async deleteMyAsset(ctx: Context, myAssetId: string): Promise<void> {
-        const exists = await this.myAssetExists(ctx, myAssetId);
+    public async deleteMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<void> {
+        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (!exists) {
-            throw new Error(`The my asset ${myAssetId} does not exist`);
+            throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
         }
-        await ctx.stub.deletePrivateData(sampleCollection, myAssetId);
+        await ctx.stub.deletePrivateData(myCollection, myPrivateAssetId);
     }
 
     @Transaction(false)
-    public async verifyAsset(ctx: Context, collection: string, myAssetId: string, hashToVerify: string): Promise<string> {
+    public async verifyMyPrivateAsset(ctx: Context, collection: string, myPrivateAssetId: string, hashToVerify: string): Promise<string> {
         const org: string = ctx.clientIdentity.getMSPID();
 
         if (org !== 'ecobankMSP') {
             throw new Error('Only the regulator can verify the asset.'); // Perhaps change message to `You can't verify your own asset`?
         }
 
-        const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myAssetId);
+        const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myPrivateAssetId);
         if (pdHashBytes.length > 0) {
             // got hash from the hash store
         } else {
             // hash doesn't exist with the given key
-            throw new Error('No private data hash with that Key: ' + myAssetId);
+            throw new Error('No private data hash with that Key: ' + myPrivateAssetId);
         }
 
         //  retrieve SHA256 hash of the converted Byte array -> string from private data collection's hash store (DB)
