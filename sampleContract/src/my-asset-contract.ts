@@ -24,8 +24,8 @@ export class MyPrivateAssetContract extends Contract {
 
         const privateData: any = {};
 
-        const transientData = ctx.stub.getTransient();
-        if (transientData.size === 0) {
+        const transientData = await ctx.stub.getTransient();
+        if (!transientData) {
             throw new Error(`Transient data not supplied. Please try again.`);
         }
 
@@ -47,16 +47,13 @@ export class MyPrivateAssetContract extends Contract {
         if (!exists) {
             throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
         }
+
         let privateDataString: string;
         const privateData: Buffer = await ctx.stub.getPrivateData(myCollection, myPrivateAssetId);
-        if (privateData.length > 0) {
-            privateDataString = JSON.parse(privateData.toString());
-            console.log('Private data retrieved from collection.');
-            console.log(privateDataString);
-        } else {
-            console.log('No private data with the Key: ', myPrivateAssetId);
-            return ('No private data with the Key: ' + myPrivateAssetId);
-        }
+        privateDataString = JSON.parse(privateData.toString());
+        console.log('Private data retrieved from collection.');
+        console.log(privateDataString);
+
         return privateDataString;
     }
 
@@ -69,8 +66,8 @@ export class MyPrivateAssetContract extends Contract {
 
         const privateData: any = {};
 
-        const transientData = ctx.stub.getTransient();
-        if (transientData.size === 0) {
+        const transientData = await ctx.stub.getTransient();
+        if (!transientData) {
             throw new Error(`Transient data not supplied. Please try again.`);
         }
 
@@ -102,13 +99,13 @@ export class MyPrivateAssetContract extends Contract {
             throw new Error('Only the regulator can verify the asset.'); // Perhaps change message to `You can't verify your own asset`?
         }
 
-        const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myPrivateAssetId);
-        if (pdHashBytes.length > 0) {
-            // got hash from the hash store
-        } else {
-            // hash doesn't exist with the given key
-            throw new Error('No private data hash with that Key: ' + myPrivateAssetId);
+        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
+        if (!exists) {
+            throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
         }
+
+        const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myPrivateAssetId);
+        console.log(pdHashBytes);
 
         //  retrieve SHA256 hash of the converted Byte array -> string from private data collection's hash store (DB)
         const actualHash: string = pdHashBytes.toString('hex');
