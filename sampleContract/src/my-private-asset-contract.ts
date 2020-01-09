@@ -3,9 +3,10 @@
  */
 
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
+import { MyPrivateAsset } from './my-private-asset';
 const myCollection: string = 'myCollection';
 
-@Info({title: 'MyPrivateAssetContract', description: 'My Smart Contract' })
+@Info({title: 'MyPrivateAssetContract', description: 'My Private Smart Contract' })
 export class MyPrivateAssetContract extends Contract {
 
     @Transaction(false)
@@ -22,7 +23,7 @@ export class MyPrivateAssetContract extends Contract {
             throw new Error(`The my asset ${myPrivateAssetId} already exists`);
         }
 
-        const privateData: any = {};
+        const privateAsset: any = new MyPrivateAsset();
 
         const transientData = ctx.stub.getTransient();
         if (transientData.size === 0) {
@@ -33,11 +34,11 @@ export class MyPrivateAssetContract extends Contract {
         transientData.forEach((value, key) => {
             const dataValue: string = value.toString('utf8');
             if (key === 'privateValue') {
-                privateData[key] = dataValue;
+                privateAsset.privateValue = dataValue;
             }
         });
 
-        await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateData)));
+        await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateAsset)));
     }
 
     @Transaction(false)
@@ -67,7 +68,7 @@ export class MyPrivateAssetContract extends Contract {
             throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
         }
 
-        const privateData: any = {};
+        const privateAsset: any = new MyPrivateAsset();
 
         const transientData = ctx.stub.getTransient();
         if (transientData.size === 0) {
@@ -78,11 +79,11 @@ export class MyPrivateAssetContract extends Contract {
         transientData.forEach((value, key) => {
             const dataValue: string = value.toString('utf8');
             if (key === 'privateValue') {
-                privateData[key] = dataValue;
+                privateAsset.privateValue = dataValue;
             }
         });
 
-        await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateData)));
+        await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateAsset)));
     }
 
     @Transaction()
@@ -98,7 +99,7 @@ export class MyPrivateAssetContract extends Contract {
     public async verifyMyPrivateAsset(ctx: Context, collection: string, myPrivateAssetId: string, hashToVerify: string): Promise<string> {
         const org: string = ctx.clientIdentity.getMSPID();
 
-        if (org !== 'ecobankMSP') {
+        if (org !== 'Org2MSP') {
             throw new Error('Only the regulator can verify the asset.'); // Perhaps change message to `You can't verify your own asset`?
         }
 
