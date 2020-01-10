@@ -25,8 +25,8 @@ export class MyPrivateAssetContract extends Contract {
 
         const privateAsset: any = new MyPrivateAsset();
 
-        const transientData = ctx.stub.getTransient();
-        if (transientData.size === 0) {
+        const transientData = await ctx.stub.getTransient();
+        if (!transientData) {
             throw new Error(`Transient data not supplied. Please try again.`);
         }
 
@@ -70,8 +70,8 @@ export class MyPrivateAssetContract extends Contract {
 
         const privateAsset: any = new MyPrivateAsset();
 
-        const transientData = ctx.stub.getTransient();
-        if (transientData.size === 0) {
+        const transientData = await ctx.stub.getTransient();
+        if (!transientData) {
             throw new Error(`Transient data not supplied. Please try again.`);
         }
 
@@ -103,8 +103,15 @@ export class MyPrivateAssetContract extends Contract {
             throw new Error('Only the regulator can verify the asset.'); // Perhaps change message to `You can't verify your own asset`?
         }
 
+        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
+        if (!exists) {
+            throw new Error(`The my asset ${myPrivateAssetId} does not exist`);
+        }
+
         const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myPrivateAssetId);
+        console.log(pdHashBytes);
         if (pdHashBytes.length > 0) {
+            console.log(pdHashBytes);
             // got hash from the hash store
         } else {
             // hash doesn't exist with the given key
