@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+ // tslint:disable: no-unused-expression
 import { Context } from 'fabric-contract-api';
 import { ChaincodeStub, ClientIdentity } from 'fabric-shim';
 import { MyPrivateAssetContract } from '.';
@@ -22,10 +23,10 @@ class TestContext implements Context {
     public logging = {
         getLogger: sinon.stub().returns(sinon.createStubInstance(winston.createLogger().constructor)),
         setLevel: sinon.stub(),
-     };
+    };
 }
 
-describe.only('MyPrivateAssetContract', () => {
+describe('MyPrivateAssetContract', () => {
 
     let contract: MyPrivateAssetContract;
     let ctx: TestContext;
@@ -37,7 +38,7 @@ describe.only('MyPrivateAssetContract', () => {
         ctx.stub.getPrivateData.withArgs(myCollection, '001').resolves(Buffer.from('{"privateValue":"150"}'));
     });
 
-    describe('#MyPrivateAssetExists', () => {
+    describe('#myPrivateAssetExists', () => {
 
         it('should return true for a private asset that exists', async () => {
             await contract.myPrivateAssetExists(ctx, '001').should.eventually.be.true;
@@ -52,7 +53,7 @@ describe.only('MyPrivateAssetContract', () => {
     describe('#createMyPrivateAsset', () => {
 
         it('should throw an error for a private asset that already exists', async () => {
-            await contract.createMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The my asset 001 already exists`);
+            await contract.createMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The private asset 001 already exists`);
         });
 
         it('should throw an error if transient data is not provided when creating private asset', async () => {
@@ -68,8 +69,7 @@ describe.only('MyPrivateAssetContract', () => {
             ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollection, '002', Buffer.from('{"privateValue":"1500"}'));
         });
 
-        // Need to change the name of the test below?
-        it('should create an asset with no private data if transient data key is not privateValue', async () => {
+        it('should create a private asset without the privateValue attribute if incorrect transient data provided', async () => {
             const transientMap = new Map<string, Buffer>();
             transientMap.set('', Buffer.from(''));
             ctx.stub.getTransient.resolves(transientMap);
@@ -82,7 +82,7 @@ describe.only('MyPrivateAssetContract', () => {
     describe('#readMyPrivateAsset', () => {
 
         it('should throw an error for my private asset that does not exist', async () => {
-            await contract.readMyPrivateAsset(ctx, '003').should.be.rejectedWith('The my asset 003 does not exist');
+            await contract.readMyPrivateAsset(ctx, '003').should.be.rejectedWith('The private asset 003 does not exist');
         });
 
         it('should return my private asset', async () => {
@@ -90,16 +90,12 @@ describe.only('MyPrivateAssetContract', () => {
             ctx.stub.getPrivateData.should.have.been.calledWithExactly(myCollection, '001');
         });
 
-        // it('should throw error if private data with the Key does not exist', async () => {
-        //     await contract.readMyPrivateAsset(ctx, '001').should.eventually.deep.equal({ penguin: '150' });
-        // });
-
     });
 
     describe('#updateMyPrivateAsset', () => {
 
         it('should throw an error for my private asset that does not exist', async () => {
-            await contract.updateMyPrivateAsset(ctx, '003').should.be.rejectedWith(`The my asset 003 does not exist`);
+            await contract.updateMyPrivateAsset(ctx, '003').should.be.rejectedWith(`The private asset 003 does not exist`);
         });
 
         it('should throw an error if transient data is not provided when updating private asset', async () => {
@@ -115,8 +111,7 @@ describe.only('MyPrivateAssetContract', () => {
             ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollection, '001', Buffer.from('{"privateValue":"99"}'));
         });
 
-        // Need to change the name of the test below?
-        it('should update an asset with no private data if transient data key is not privateValue', async () => {
+        it('should update a private asset so it doesnt have the privateValue attribute if incorrect transient data provided', async () => {
             const transientMap = new Map<string, Buffer>();
             transientMap.set('', Buffer.from(''));
             ctx.stub.getTransient.resolves(transientMap);
@@ -129,7 +124,7 @@ describe.only('MyPrivateAssetContract', () => {
     describe('#deleteMyPrivateAsset', () => {
 
         it('should throw an error for my private asset that does not exist', async () => {
-            await contract.deleteMyPrivateAsset(ctx, '003').should.be.rejectedWith('The my asset 003 does not exist');
+            await contract.deleteMyPrivateAsset(ctx, '003').should.be.rejectedWith('The private asset 003 does not exist');
         });
 
         it('should delete my private asset', async () => {
@@ -141,37 +136,29 @@ describe.only('MyPrivateAssetContract', () => {
 
     describe('#verifyMyPrivateAsset', () => {
 
-        it('should error if an org that does not have permission to verify tries the private asset to verify the private asset', async () => {
-            await contract.verifyMyPrivateAsset(ctx, myCollection, '001', 'xyz').should.be.rejectedWith('Only the regulator can verify the asset.');
-            // tslint:disable-next-line: no-unused-expression
+        it('should throw an error for my private asset that does not exist', async () => {
+            await contract.verifyMyPrivateAsset(ctx, myCollection, '003', 'xyz').should.be.rejectedWith('The private asset 003 does not exist');
             ctx.stub.getPrivateDataHash.should.not.have.been.called;
         });
 
-        it('should throw an error for my private asset that does not exist', async () => {
-            ctx.clientIdentity.getMSPID.returns('Org2MSP');
-            await contract.verifyMyPrivateAsset(ctx, myCollection, '003', 'xyz').should.be.rejectedWith('The my asset 003 does not exist');
-        });
-
         it('should return success message if hash provided matches the hash of the private data', async () => {
-            ctx.clientIdentity.getMSPID.returns('Org2MSP');
             ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
             ctx.stub.getPrivateData.withArgs(myCollection, '001').resolves(Buffer.from('{"privateValue":"150"}'));
-            await contract.verifyMyPrivateAsset(ctx, myCollection, '001', '78797a');
+            const result = await contract.verifyMyPrivateAsset(ctx, myCollection, '001', '78797a'); // 78797a is the hash value of xyz
+            result.should.equal('\nCalculated Hash provided: \n78797a\n\n             MATCHES  <----->  \n\nHash from Private Data Hash State \n78797a');
         });
 
         it('should throw an error if hash provided does not match the hash of the private data', async () => {
-            ctx.clientIdentity.getMSPID.returns('Org2MSP');
             ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
             ctx.stub.getPrivateData.withArgs(myCollection, '001').resolves(Buffer.from('{"privateValue":"150"}'));
             await contract.verifyMyPrivateAsset(ctx, myCollection, '001', 'xyz').should.be.rejectedWith('Could not match the Private Data Hash State: 78797a');
         });
 
-        // it('should throw an error...', async () => {
-        //     ctx.clientIdentity.getMSPID.returns('Org2MSP');
-        //     ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
-        //     ctx.stub.getPrivateData.withArgs('someCollection', '001').resolves(Buffer.from('{"penguin":"150"}'));
-        //     await contract.verifyMyPrivateAsset(ctx, 'someCollection', '001', '78797a').should.be.rejectedWith('No private data hash with that Key: 001');
-        // });
+        it('should throw an error when user tries to verify an asset that doesnt exist in the given pdc', async () => {
+            ctx.stub.getPrivateDataHash.resolves(undefined);
+            ctx.stub.getPrivateData.withArgs('someCollection', '001').resolves(Buffer.from('{"penguin":"150"}'));
+            await contract.verifyMyPrivateAsset(ctx, 'someCollection', '001', '78797a').should.be.rejectedWith('No private data hash with that Key: 001');
+        });
 
     });
 
