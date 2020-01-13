@@ -136,11 +136,6 @@ describe('MyPrivateAssetContract', () => {
 
     describe('#verifyMyPrivateAsset', () => {
 
-        it('should throw an error for my private asset that does not exist', async () => {
-            await contract.verifyMyPrivateAsset(ctx, myCollection, '003', 'xyz').should.be.rejectedWith('The private asset 003 does not exist');
-            ctx.stub.getPrivateDataHash.should.not.have.been.called;
-        });
-
         it('should return success message if hash provided matches the hash of the private data', async () => {
             ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
             ctx.stub.getPrivateData.withArgs(myCollection, '001').resolves(Buffer.from('{"privateValue":"150"}'));
@@ -151,11 +146,11 @@ describe('MyPrivateAssetContract', () => {
         it('should throw an error if hash provided does not match the hash of the private data', async () => {
             ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
             ctx.stub.getPrivateData.withArgs(myCollection, '001').resolves(Buffer.from('{"privateValue":"150"}'));
-            await contract.verifyMyPrivateAsset(ctx, myCollection, '001', 'xyz').should.be.rejectedWith('Could not match the Private Data Hash State: 78797a');
+            await contract.verifyMyPrivateAsset(ctx, myCollection, '001', 'xyz').should.be.rejectedWith('Could not match the Private Data Hash State');
         });
 
-        it('should throw an error when user tries to verify an asset that doesnt exist in the given pdc', async () => {
-            ctx.stub.getPrivateDataHash.resolves(undefined);
+        it('should throw an error when user tries to verify an asset that doesnt exist', async () => {
+            ctx.stub.getPrivateDataHash.resolves(Buffer.from(''));
             ctx.stub.getPrivateData.withArgs('someCollection', '001').resolves(Buffer.from('{"penguin":"150"}'));
             await contract.verifyMyPrivateAsset(ctx, 'someCollection', '001', '78797a').should.be.rejectedWith('No private data hash with that Key: 001');
         });
