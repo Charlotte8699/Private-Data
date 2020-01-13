@@ -89,13 +89,8 @@ export class MyPrivateAssetContract extends Contract {
     @Transaction(false)
     public async verifyMyPrivateAsset(ctx: Context, collection: string, myPrivateAssetId: string, hashToVerify: string): Promise<string> {
 
-        const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
-        if (!exists) {
-            throw new Error(`The private asset ${myPrivateAssetId} does not exist`);
-        }
-
         const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myPrivateAssetId);
-        if (!pdHashBytes) {
+        if (pdHashBytes.length === 0) {
             throw new Error('No private data hash with that Key: ' + myPrivateAssetId);
         }
 
@@ -104,7 +99,7 @@ export class MyPrivateAssetContract extends Contract {
         if (hashToVerify === actualHash) {
             return '\nCalculated Hash provided: \n' + hashToVerify + '\n\n             MATCHES  <----->  \n\nHash from Private Data Hash State \n' + actualHash;
         } else {
-            throw new Error('Could not match the Private Data Hash State: ' + actualHash);
+            throw new Error('Could not match the Private Data Hash State');
         }
     }
 
