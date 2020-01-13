@@ -23,19 +23,13 @@ export class MyPrivateAssetContract extends Contract {
             throw new Error(`The private asset ${myPrivateAssetId} already exists`);
         }
 
-        const privateAsset: any = new MyPrivateAsset();
+        const privateAsset: MyPrivateAsset = new MyPrivateAsset();
 
         const transientData = await ctx.stub.getTransient();
-        if (!transientData) {
-            throw new Error(`Transient data not supplied. Please try again.`);
+        if (transientData.size === 0 || !transientData.has('privateValue')) {
+            throw new Error('The privateValue key was not specified in transient data. Please try again.');
         }
-
-        transientData.forEach((value, key) => {
-            const dataValue: string = value.toString('utf8');
-            if (key === 'privateValue') {
-                privateAsset.privateValue = dataValue;
-            }
-        });
+        privateAsset.privateValue = transientData.get('privateValue').toString('utf8');
 
         await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateAsset)));
     }
@@ -60,19 +54,13 @@ export class MyPrivateAssetContract extends Contract {
             throw new Error(`The private asset ${myPrivateAssetId} does not exist`);
         }
 
-        const privateAsset: any = new MyPrivateAsset();
+        const privateAsset: MyPrivateAsset = new MyPrivateAsset();
 
         const transientData = await ctx.stub.getTransient();
-        if (!transientData) {
-            throw new Error(`Transient data not supplied. Please try again.`);
+        if (transientData.size === 0 || !transientData.has('privateValue')) {
+            throw new Error('The privateValue key was not specified in transient data. Please try again.');
         }
-
-        transientData.forEach((value, key) => {
-            const dataValue: string = value.toString('utf8');
-            if (key === 'privateValue') {
-                privateAsset.privateValue = dataValue;
-            }
-        });
+        privateAsset.privateValue = transientData.get('privateValue').toString('utf8');
 
         await ctx.stub.putPrivateData(myCollection, myPrivateAssetId, Buffer.from(JSON.stringify(privateAsset)));
     }
@@ -91,7 +79,7 @@ export class MyPrivateAssetContract extends Contract {
 
         const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(collection, myPrivateAssetId);
         if (pdHashBytes.length === 0) {
-            throw new Error('No private data hash with that Key: ' + myPrivateAssetId);
+            throw new Error('No private data hash with the key: ' + myPrivateAssetId);
         }
 
         const actualHash: string = pdHashBytes.toString('hex');
