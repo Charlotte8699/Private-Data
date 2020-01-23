@@ -60,14 +60,12 @@ describe('MyPrivateAssetContract', () => {
         });
 
         it('should throw an error if transient data is not provided when creating private asset', async () => {
-            // eslint-disable-next-line no-undef
             let transientMap = new Map();
             ctx.stub.getTransient.resolves(transientMap);
             await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should throw an error if transient data key is not privateValue', async () => {
-            // eslint-disable-next-line no-undef
             let transientMap = new Map();
             transientMap.set('prVal', Buffer.from('125'));
             ctx.stub.getTransient.resolves(transientMap);
@@ -75,7 +73,6 @@ describe('MyPrivateAssetContract', () => {
         });
 
         it('should create a private asset if transient data key is privateValue', async () => {
-            // eslint-disable-next-line no-undef
             let transientMap = new Map();
             transientMap.set('privateValue', Buffer.from('1500'));
             ctx.stub.getTransient.resolves(transientMap);
@@ -105,14 +102,12 @@ describe('MyPrivateAssetContract', () => {
         });
 
         it('should throw an error if transient data is not provided when updating private asset', async () => {
-            // eslint-disable-next-line no-undef
             let transientMap = new Map();
             ctx.stub.getTransient.resolves(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should update my private asset if transient data key is privateValue', async () => {
-            // eslint-disable-next-line no-undef
             let transientMap = new Map();
             transientMap.set('privateValue', Buffer.from('99'));
             ctx.stub.getTransient.resolves(transientMap);
@@ -121,7 +116,6 @@ describe('MyPrivateAssetContract', () => {
         });
 
         it('should throw an error if transient data key is not privateValue', async () => {
-            // eslint-disable-next-line no-undef
             let transientMap = new Map();
             transientMap.set('prVal', Buffer.from('125'));
             ctx.stub.getTransient.resolves(transientMap);
