@@ -2,28 +2,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
-import { MyPrivateAsset } from './my-private-asset';
-const myCollectionName: string = 'myCollection';
+'use strict';
 
-@Info({title: 'MyPrivateAssetContract', description: 'My Private Smart Contract' })
-export class MyPrivateAssetContract extends Contract {
+const { Contract } = require('fabric-contract-api');
+const myCollectionName = 'myCollection';
 
-    @Transaction(false)
-    @Returns('boolean')
-    public async myPrivateAssetExists(ctx: Context, myPrivateAssetId: string): Promise<boolean> {
+
+class MyPrivateAssetContract extends Contract {
+
+    async myPrivateAssetExists(ctx, myPrivateAssetId) {
         const buffer = await ctx.stub.getPrivateData(myCollectionName, myPrivateAssetId);
         return (!!buffer && buffer.length > 0);
     }
 
-    @Transaction()
-    public async createMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<void> {
+    async createMyPrivateAsset(ctx, myPrivateAssetId) {
         const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (exists) {
             throw new Error(`The private asset ${myPrivateAssetId} already exists`);
         }
 
-        const privateAsset: MyPrivateAsset = new MyPrivateAsset();
+        const privateAsset = {};
 
         const transientData = await ctx.stub.getTransient();
         if (transientData.size === 0 || !transientData.has('privateValue')) {
@@ -34,27 +32,24 @@ export class MyPrivateAssetContract extends Contract {
         await ctx.stub.putPrivateData(myCollectionName, myPrivateAssetId, Buffer.from(JSON.stringify(privateAsset)));
     }
 
-    @Transaction(false)
-    @Returns('myPrivateAsset')
-    public async readMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<string> {
+    async readMyPrivateAsset(ctx, myPrivateAssetId) {
         const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (!exists) {
             throw new Error(`The private asset ${myPrivateAssetId} does not exist`);
         }
-        let privateDataString: string;
-        const privateData: Buffer = await ctx.stub.getPrivateData(myCollectionName, myPrivateAssetId);
+        let privateDataString;
+        const privateData = await ctx.stub.getPrivateData(myCollectionName, myPrivateAssetId);
         privateDataString = JSON.parse(privateData.toString());
         return privateDataString;
     }
 
-    @Transaction()
-    public async updateMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<void> {
+    async updateMyPrivateAsset(ctx, myPrivateAssetId) {
         const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (!exists) {
             throw new Error(`The private asset ${myPrivateAssetId} does not exist`);
         }
 
-        const privateAsset: MyPrivateAsset = new MyPrivateAsset();
+        const privateAsset = {};
 
         const transientData = await ctx.stub.getTransient();
         if (transientData.size === 0 || !transientData.has('privateValue')) {
@@ -65,8 +60,7 @@ export class MyPrivateAssetContract extends Contract {
         await ctx.stub.putPrivateData(myCollectionName, myPrivateAssetId, Buffer.from(JSON.stringify(privateAsset)));
     }
 
-    @Transaction()
-    public async deleteMyPrivateAsset(ctx: Context, myPrivateAssetId: string): Promise<void> {
+    async deleteMyPrivateAsset(ctx, myPrivateAssetId) {
         const exists = await this.myPrivateAssetExists(ctx, myPrivateAssetId);
         if (!exists) {
             throw new Error(`The private asset ${myPrivateAssetId} does not exist`);
@@ -74,15 +68,13 @@ export class MyPrivateAssetContract extends Contract {
         await ctx.stub.deletePrivateData(myCollectionName, myPrivateAssetId);
     }
 
-    @Transaction(false)
-    public async verifyMyPrivateAsset(ctx: Context, myPrivateAssetId: string, hashToVerify: string): Promise<boolean> {
-
-        const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(myCollectionName, myPrivateAssetId);
+    async verifyMyPrivateAsset(ctx, myPrivateAssetId, hashToVerify) {
+        const pdHashBytes = await ctx.stub.getPrivateDataHash(myCollectionName, myPrivateAssetId);
         if (pdHashBytes.length === 0) {
             throw new Error('No private data hash with the key: ' + myPrivateAssetId);
         }
 
-        const actualHash: string = pdHashBytes.toString('hex');
+        const actualHash = pdHashBytes.toString('hex');
 
         if (hashToVerify === actualHash) {
             return true;
@@ -92,3 +84,5 @@ export class MyPrivateAssetContract extends Contract {
     }
 
 }
+
+module.exports = MyPrivateAssetContract;

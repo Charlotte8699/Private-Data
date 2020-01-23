@@ -75,9 +75,3 @@ typings/
 
 # Serverless directories
 .serverless
-
-# Compiled TypeScript files
-dist
-
-# DS_Store
-.DS_Store

@@ -2,35 +2,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
- // tslint:disable: no-unused-expression
-import { Context } from 'fabric-contract-api';
-import { ChaincodeStub, ClientIdentity } from 'fabric-shim';
-import { MyPrivateAssetContract } from '.';
+'use strict';
+const { ChaincodeStub, ClientIdentity } = require('fabric-shim');
+const { MyPrivateAssetContract } = require('..');
+const winston = require('winston');
 
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import winston = require('winston');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
-class TestContext implements Context {
-    public stub: sinon.SinonStubbedInstance<ChaincodeStub> = sinon.createStubInstance(ChaincodeStub);
-    public clientIdentity: sinon.SinonStubbedInstance<ClientIdentity> = sinon.createStubInstance(ClientIdentity);
-    public logging = {
-        getLogger: sinon.stub().returns(sinon.createStubInstance(winston.createLogger().constructor)),
-        setLevel: sinon.stub(),
-    };
+class TestContext {
+
+    constructor() {
+        this.stub = sinon.createStubInstance(ChaincodeStub);
+        this.clientIdentity = sinon.createStubInstance(ClientIdentity);
+        this.logging = {
+            getLogger: sinon.stub().returns(sinon.createStubInstance(winston.createLogger().constructor)),
+            setLevel: sinon.stub(),
+        };
+    }
+
 }
 
 describe('MyPrivateAssetContract', () => {
 
-    let contract: MyPrivateAssetContract;
-    let ctx: TestContext;
-    const myCollectionName: string = 'myCollection';
+    let contract;
+    let ctx;
+    const myCollectionName = 'myCollection';
 
     beforeEach(() => {
         contract = new MyPrivateAssetContract();
@@ -53,24 +56,27 @@ describe('MyPrivateAssetContract', () => {
     describe('#createMyPrivateAsset', () => {
 
         it('should throw an error for a private asset that already exists', async () => {
-            await contract.createMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The private asset 001 already exists`);
+            await contract.createMyPrivateAsset(ctx, '001').should.be.rejectedWith('The private asset 001 already exists');
         });
 
         it('should throw an error if transient data is not provided when creating private asset', async () => {
-            const transientMap = new Map<string, Buffer>();
+            // eslint-disable-next-line no-undef
+            let transientMap = new Map();
             ctx.stub.getTransient.resolves(transientMap);
-            await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
+            await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should throw an error if transient data key is not privateValue', async () => {
-            const transientMap = new Map<string, Buffer>();
+            // eslint-disable-next-line no-undef
+            let transientMap = new Map();
             transientMap.set('prVal', Buffer.from('125'));
             ctx.stub.getTransient.resolves(transientMap);
-            await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
+            await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should create a private asset if transient data key is privateValue', async () => {
-            const transientMap = new Map<string, Buffer>();
+            // eslint-disable-next-line no-undef
+            let transientMap = new Map();
             transientMap.set('privateValue', Buffer.from('1500'));
             ctx.stub.getTransient.resolves(transientMap);
             await contract.createMyPrivateAsset(ctx, '002');
@@ -95,17 +101,19 @@ describe('MyPrivateAssetContract', () => {
     describe('#updateMyPrivateAsset', () => {
 
         it('should throw an error for my private asset that does not exist', async () => {
-            await contract.updateMyPrivateAsset(ctx, '003').should.be.rejectedWith(`The private asset 003 does not exist`);
+            await contract.updateMyPrivateAsset(ctx, '003').should.be.rejectedWith('The private asset 003 does not exist');
         });
 
         it('should throw an error if transient data is not provided when updating private asset', async () => {
-            const transientMap = new Map<string, Buffer>();
+            // eslint-disable-next-line no-undef
+            let transientMap = new Map();
             ctx.stub.getTransient.resolves(transientMap);
-            await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
+            await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should update my private asset if transient data key is privateValue', async () => {
-            const transientMap = new Map<string, Buffer>();
+            // eslint-disable-next-line no-undef
+            let transientMap = new Map();
             transientMap.set('privateValue', Buffer.from('99'));
             ctx.stub.getTransient.resolves(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001');
@@ -113,10 +121,11 @@ describe('MyPrivateAssetContract', () => {
         });
 
         it('should throw an error if transient data key is not privateValue', async () => {
-            const transientMap = new Map<string, Buffer>();
+            // eslint-disable-next-line no-undef
+            let transientMap = new Map();
             transientMap.set('prVal', Buffer.from('125'));
             ctx.stub.getTransient.resolves(transientMap);
-            await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
+            await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
     });
