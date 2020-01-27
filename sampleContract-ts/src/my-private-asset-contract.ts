@@ -4,7 +4,7 @@
 import crypto = require('crypto');
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
 import { MyPrivateAsset } from './my-private-asset';
-const myCollectionName: string = 'myCollection';
+const myCollectionName: string = 'collectionOne';
 
 @Info({title: 'MyPrivateAssetContract', description: 'My Private Smart Contract' })
 export class MyPrivateAssetContract extends Contract {
