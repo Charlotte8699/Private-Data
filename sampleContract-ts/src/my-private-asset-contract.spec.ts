@@ -31,7 +31,7 @@ describe('MyPrivateAssetContract', () => {
 
     let contract: MyPrivateAssetContract;
     let ctx: TestContext;
-    const myCollectionName: string = 'myCollection';
+    const myCollectionName: string = 'collectionOne';
 
     beforeEach(() => {
         contract = new MyPrivateAssetContract();

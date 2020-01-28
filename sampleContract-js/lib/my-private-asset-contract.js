@@ -5,7 +5,8 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-const myCollectionName = 'myCollection';
+const crypto = require('crypto');
+const myCollectionName = 'collectionOne';
 
 
 class MyPrivateAssetContract extends Contract {
@@ -68,7 +69,10 @@ class MyPrivateAssetContract extends Contract {
         await ctx.stub.deletePrivateData(myCollectionName, myPrivateAssetId);
     }
 
-    async verifyMyPrivateAsset(ctx, myPrivateAssetId, hashToVerify) {
+    async verifyMyPrivateAsset(ctx, myPrivateAssetId, objectToVerify) {
+
+        // Convert provided object into a hash
+        const hashToVerify = crypto.createHash('sha256').update(objectToVerify).digest('hex');
         const pdHashBytes = await ctx.stub.getPrivateDataHash(myCollectionName, myPrivateAssetId);
         if (pdHashBytes.length === 0) {
             throw new Error('No private data hash with the key: ' + myPrivateAssetId);
@@ -76,10 +80,11 @@ class MyPrivateAssetContract extends Contract {
 
         const actualHash = pdHashBytes.toString('hex');
 
+        // Compare the hash calculated (from object provided) and the hash stored on public ledger
         if (hashToVerify === actualHash) {
             return true;
         } else {
-            throw new Error(`No match found for ${hashToVerify}. Please try again.`);
+            return false;
         }
     }
 

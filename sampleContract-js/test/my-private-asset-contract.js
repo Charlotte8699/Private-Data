@@ -7,6 +7,7 @@ const { ChaincodeStub, ClientIdentity } = require('fabric-shim');
 const { MyPrivateAssetContract } = require('..');
 const winston = require('winston');
 
+const crypto = require('crypto');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const sinon = require('sinon');
@@ -33,7 +34,7 @@ describe('MyPrivateAssetContract', () => {
 
     let contract;
     let ctx;
-    const myCollectionName = 'myCollection';
+    const myCollectionName = 'collectionOne';
 
     beforeEach(() => {
         contract = new MyPrivateAssetContract();
@@ -140,22 +141,22 @@ describe('MyPrivateAssetContract', () => {
     describe('#verifyMyPrivateAsset', () => {
 
         it('should return success message if hash provided matches the hash of the private data', async () => {
-            ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
-            ctx.stub.getPrivateData.withArgs(myCollectionName, '001').resolves(Buffer.from('{"privateValue":"150"}'));
-            const result = await contract.verifyMyPrivateAsset(ctx, '001', '78797a'); // 78797a is the hash value of xyz
+            const objectToVerify = '{"privateValue":"125"}';
+            const hashToVerify = crypto.createHash('sha256').update(objectToVerify).digest('hex');
+            ctx.stub.getPrivateDataHash.resolves(Buffer.from(hashToVerify, 'hex'));
+            const result = await contract.verifyMyPrivateAsset(ctx, '001', '{"privateValue":"125"}');
             result.should.equal(true);
         });
 
         it('should throw an error if hash provided does not match the hash of the private data', async () => {
-            ctx.stub.getPrivateDataHash.resolves(Buffer.from('xyz'));
-            ctx.stub.getPrivateData.withArgs(myCollectionName, '001').resolves(Buffer.from('{"privateValue":"150"}'));
-            await contract.verifyMyPrivateAsset(ctx, '001', 'xyz').should.be.rejectedWith('No match found for xyz. Please try again.');
+            ctx.stub.getPrivateDataHash.resolves(Buffer.from('someHash'));
+            const result = await contract.verifyMyPrivateAsset(ctx, '001', 'someObject');
+            result.should.equal(false);
         });
 
         it('should throw an error when user tries to verify an asset that doesnt exist', async () => {
             ctx.stub.getPrivateDataHash.resolves(Buffer.from(''));
-            ctx.stub.getPrivateData.withArgs('someCollection', '001').resolves(Buffer.from('{"penguin":"150"}'));
-            await contract.verifyMyPrivateAsset(ctx, '001', '78797a').should.be.rejectedWith('No private data hash with the key: 001');
+            await contract.verifyMyPrivateAsset(ctx, '001', 'someObject').should.be.rejectedWith('No private data hash with the key: 001');
         });
 
     });
