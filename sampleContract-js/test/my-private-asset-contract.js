@@ -62,21 +62,21 @@ describe('MyPrivateAssetContract', () => {
 
         it('should throw an error if transient data is not provided when creating private asset', async () => {
             let transientMap = new Map();
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should throw an error if transient data key is not privateValue', async () => {
             let transientMap = new Map();
             transientMap.set('prVal', Buffer.from('125'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should create a private asset if transient data key is privateValue', async () => {
             let transientMap = new Map();
             transientMap.set('privateValue', Buffer.from('1500'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.createMyPrivateAsset(ctx, '002');
             ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollectionName, '002', Buffer.from('{"privateValue":"1500"}'));
         });
@@ -104,14 +104,14 @@ describe('MyPrivateAssetContract', () => {
 
         it('should throw an error if transient data is not provided when updating private asset', async () => {
             let transientMap = new Map();
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 
         it('should update my private asset if transient data key is privateValue', async () => {
             let transientMap = new Map();
             transientMap.set('privateValue', Buffer.from('99'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001');
             ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollectionName, '001', Buffer.from('{"privateValue":"99"}'));
         });
@@ -119,7 +119,7 @@ describe('MyPrivateAssetContract', () => {
         it('should throw an error if transient data key is not privateValue', async () => {
             let transientMap = new Map();
             transientMap.set('prVal', Buffer.from('125'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith('The privateValue key was not specified in transient data. Please try again.');
         });
 

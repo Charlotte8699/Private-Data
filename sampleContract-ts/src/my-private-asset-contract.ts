@@ -25,7 +25,7 @@ export class MyPrivateAssetContract extends Contract {
 
         const privateAsset: MyPrivateAsset = new MyPrivateAsset();
 
-        const transientData: Map<string, Buffer> = await ctx.stub.getTransient();
+        const transientData: Map<string, Buffer> = ctx.stub.getTransient();
         if (transientData.size === 0 || !transientData.has('privateValue')) {
             throw new Error('The privateValue key was not specified in transient data. Please try again.');
         }
@@ -55,7 +55,7 @@ export class MyPrivateAssetContract extends Contract {
 
         const privateAsset: MyPrivateAsset = new MyPrivateAsset();
 
-        const transientData: Map<string, Buffer> = await ctx.stub.getTransient();
+        const transientData: Map<string, Buffer> = ctx.stub.getTransient();
         if (transientData.size === 0 || !transientData.has('privateValue')) {
             throw new Error('The privateValue key was not specified in transient data. Please try again.');
         }
@@ -74,10 +74,10 @@ export class MyPrivateAssetContract extends Contract {
     }
 
     @Transaction(false)
-    public async verifyMyPrivateAsset(ctx: Context, myPrivateAssetId: string, objectToVerify: string): Promise<boolean> {
+    public async verifyMyPrivateAsset(ctx: Context, myPrivateAssetId: string, objectToVerify: MyPrivateAsset): Promise<boolean> {
 
         // Convert user provided object into a hash
-        const hashToVerify: string = crypto.createHash('sha256').update(objectToVerify).digest('hex');
+        const hashToVerify: string = crypto.createHash('sha256').update(JSON.stringify(objectToVerify)).digest('hex');
         const pdHashBytes: Buffer = await ctx.stub.getPrivateDataHash(myCollectionName, myPrivateAssetId);
         if (pdHashBytes.length === 0) {
             throw new Error('No private data hash with the key: ' + myPrivateAssetId);

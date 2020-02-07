@@ -24,7 +24,7 @@ class MyPrivateAssetContract extends Contract {
 
         const privateAsset = {};
 
-        const transientData = await ctx.stub.getTransient();
+        const transientData = ctx.stub.getTransient();
         if (transientData.size === 0 || !transientData.has('privateValue')) {
             throw new Error('The privateValue key was not specified in transient data. Please try again.');
         }
@@ -52,7 +52,7 @@ class MyPrivateAssetContract extends Contract {
 
         const privateAsset = {};
 
-        const transientData = await ctx.stub.getTransient();
+        const transientData = ctx.stub.getTransient();
         if (transientData.size === 0 || !transientData.has('privateValue')) {
             throw new Error('The privateValue key was not specified in transient data. Please try again.');
         }
