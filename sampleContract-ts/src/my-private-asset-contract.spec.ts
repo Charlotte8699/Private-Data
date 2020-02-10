@@ -59,21 +59,21 @@ describe('MyPrivateAssetContract', () => {
 
         it('should throw an error if transient data is not provided when creating private asset', async () => {
             const transientMap: Map<string, Buffer> = new Map<string, Buffer>();
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
         });
 
         it('should throw an error if transient data key is not privateValue', async () => {
             const transientMap: Map<string, Buffer> = new Map<string, Buffer>();
             transientMap.set('prVal', Buffer.from('125'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.createMyPrivateAsset(ctx, '002').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
         });
 
         it('should create a private asset if transient data key is privateValue', async () => {
             const transientMap: Map<string, Buffer> = new Map<string, Buffer>();
             transientMap.set('privateValue', Buffer.from('1500'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.createMyPrivateAsset(ctx, '002');
             ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollectionName, '002', Buffer.from('{"privateValue":"1500"}'));
         });
@@ -101,14 +101,14 @@ describe('MyPrivateAssetContract', () => {
 
         it('should throw an error if transient data is not provided when updating private asset', async () => {
             const transientMap: Map<string, Buffer> = new Map<string, Buffer>();
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
         });
 
         it('should update my private asset if transient data key is privateValue', async () => {
             const transientMap: Map<string, Buffer> = new Map<string, Buffer>();
             transientMap.set('privateValue', Buffer.from('99'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001');
             ctx.stub.putPrivateData.should.have.been.calledOnceWithExactly(myCollectionName, '001', Buffer.from('{"privateValue":"99"}'));
         });
@@ -116,7 +116,7 @@ describe('MyPrivateAssetContract', () => {
         it('should throw an error if transient data key is not privateValue', async () => {
             const transientMap: Map<string, Buffer> = new Map<string, Buffer>();
             transientMap.set('prVal', Buffer.from('125'));
-            ctx.stub.getTransient.resolves(transientMap);
+            ctx.stub.getTransient.returns(transientMap);
             await contract.updateMyPrivateAsset(ctx, '001').should.be.rejectedWith(`The privateValue key was not specified in transient data. Please try again.`);
         });
 
@@ -141,19 +141,19 @@ describe('MyPrivateAssetContract', () => {
             const privateObj: string = '{"privateValue":"125"}';
             const hashToVerify: string = crypto.createHash('sha256').update(privateObj).digest('hex');
             ctx.stub.getPrivateDataHash.resolves(Buffer.from(hashToVerify, 'hex'));
-            const result: boolean = await contract.verifyMyPrivateAsset(ctx, '001', '{\"privateValue\":\"125\"}');
+            const result: boolean = await contract.verifyMyPrivateAsset(ctx, '001', {privateValue: '125'});
             result.should.equal(true);
         });
 
         it('should return false if hash calculated from object provided does not match the hash of the private data', async () => {
             ctx.stub.getPrivateDataHash.resolves(Buffer.from('someHash'));
-            const result: boolean = await contract.verifyMyPrivateAsset(ctx, '001', 'someObject');
+            const result: boolean = await contract.verifyMyPrivateAsset(ctx, '001', {privateValue: 'someValue'});
             result.should.equal(false);
         });
 
         it('should throw an error when user tries to verify an asset that doesnt exist', async () => {
             ctx.stub.getPrivateDataHash.resolves(Buffer.from(''));
-            await contract.verifyMyPrivateAsset(ctx, '001', 'someObject').should.be.rejectedWith('No private data hash with the key: 001');
+            await contract.verifyMyPrivateAsset(ctx, '001', {privateValue: 'someVal'}).should.be.rejectedWith('No private data hash with the key: 001');
         });
 
     });
